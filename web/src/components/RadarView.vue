@@ -24,10 +24,12 @@
 import { computed, ref } from "vue";
 import VChart from "vue-echarts";
 import { useAppState } from "../composables/useState";
-import { BENCHMARK_DESCRIPTIONS, BENCHMARK_LABELS } from "../types";
+import { BENCHMARK_DESCRIPTIONS, BENCHMARK_LABELS, BENCHMARK_ORDER, BENCHMARK_MAXES, modelDisplayName } from "../types";
 import "echarts";
 
 const state = useAppState();
+
+const BENCHMARK_INDICATORS = BENCHMARK_ORDER.map(key => ({ key, max: BENCHMARK_MAXES[key] ?? 100 }));
 
 const chartRef = ref();
 const containerRef = ref<HTMLElement | null>(null);
@@ -36,12 +38,6 @@ const tooltipX = ref(0);
 const tooltipY = ref(0);
 
 let chartInstance: any = null;
-
-function modelDisplayName(m: { name: string } | null | undefined): string {
-  if (!m) return "A";
-  const idx = m.name.indexOf(": ");
-  return idx !== -1 ? m.name.slice(idx + 2) : m.name;
-}
 
 function onChartInit(instance: any) {
   chartInstance = instance;
@@ -102,20 +98,6 @@ function onZrMouseMove(e: any) {
   tooltipX.value = x + 12;
   tooltipY.value = y - 10;
 }
-
-const BENCHMARK_INDICATORS = [
-  { key: "GPQA Diamond", max: 100 },
-  { key: "HLE", max: 50 },
-  { key: "IFBench", max: 100 },
-  { key: "τ²-Bench Telecom", max: 100 },
-  { key: "AA-LCR", max: 100 },
-  { key: "GDPval-AA", max: 70 },
-  { key: "CritPt", max: 100 },
-  { key: "AA-Omniscience Accuracy", max: 100 },
-  { key: "AA-Omniscience Non-Hallucination Rate", max: 100 },
-  { key: "SciCode", max: 60 },
-  { key: "Terminal-Bench Hard", max: 70 },
-];
 
 const N = BENCHMARK_INDICATORS.length;
 const AREA_FACTOR = 0.5 * Math.sin((2 * Math.PI) / N);

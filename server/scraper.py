@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import re
 import time
@@ -249,7 +250,6 @@ async def fetch_effective_pricing(
         pricing_json_str = pricing_json_str.replace('\\"', '"')
 
         try:
-            import json
             pricing_data = json.loads(pricing_json_str)
             prompt_price = pricing_data.get("prompt")
             completion_price = pricing_data.get("completion")

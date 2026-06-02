@@ -138,13 +138,13 @@
           <div class="mc-dot" :class="[metaDotClass(m), { 'mc-dot-hover': metaHover && metaHover.key === m.key }]" :style="metaDotStyle(m)"></div>
           <div class="mc-tooltip" :class="metaTooltipClass(m)" :style="metaTooltipStyle(m)">
               <template v-if="m.key === 'ctx'">
-                <span class="mc-tip-label">最大输出长度 </span>
+                <span class="mc-tip-label">最大输出长度</span>
                 <span class="mc-tip-ctx-val">{{ formatCtxTooltipNum(m) }}</span><span class="mc-ctx-unit" v-if="formatCtxTooltipUnit(m)">{{ formatCtxTooltipUnit(m) }}</span>
               </template>
               <template v-else>
-                <span class="mc-tip-currency">USD</span>
+                <span class="mc-tip-currency">USD </span>
                 <span class="mc-tip-value">{{ metaHover?.usd?.replace('$', '') }}</span>
-                <span class="mc-tip-unit">$<span class="mc-per-unit">/M tokens</span></span>
+                <span class="mc-tip-unit"> $<span class="mc-per-unit">/M tokens</span></span>
               </template>
             </div>
         </div>
@@ -1287,10 +1287,10 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 
 .mc-tooltip {
   position: absolute;
-  top: -44px;
-  padding: 6px 14px;
+  top: -38px;
+  padding: 4px 10px;
   background: #fff;
-  border-radius: 8px;
+  border-radius: 6px;
   white-space: nowrap;
   pointer-events: none;
   z-index: 10;
@@ -1300,7 +1300,7 @@ function metaBarB(m: MetaMetric): Record<string, string> {
   transition: opacity 0.12s ease, left 0.15s ease-out;
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  font-family: Consolas, Courier New, monospace;
 }
 
 .mc-tooltip.tip-visible {
@@ -1316,14 +1316,15 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 }
 
 .mc-tip-currency {
-  font-size: 14px;
+  font-size: 11px;
   color: #aaa;
   font-weight: 600;
   letter-spacing: 0.5px;
+  margin-right: 4px;
 }
 
 .mc-tip-label {
-  font-size: 14px;
+  font-size: 11px;
   color: #888;
   font-weight: 500;
   margin-right: 4px;
@@ -1331,14 +1332,14 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 
 .mc-tip-value {
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 700;
   color: #444;
 }
 
 .mc-tip-ctx-val {
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 700;
   color: #666;
   margin: 0 4px;
@@ -1347,16 +1348,17 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 
 .mc-ctx-unit {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: #999;
   margin-left: 1px;
 }
 
 .mc-tip-unit {
-  font-size: 16px;
+  font-size: 11px;
   color: #999;
   font-weight: 500;
+  margin-left: 4px;
 }
 
 .mc-per-unit {
@@ -1623,10 +1625,10 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 
 .ic-tooltip {
   position: absolute;
-  top: -56px;
-  padding: 6px 14px;
+  top: -48px;
+  padding: 4px 10px;
   background: #fff;
-  border-radius: 8px;
+  border-radius: 6px;
   white-space: nowrap;
   pointer-events: none;
   z-index: 10;
@@ -1637,6 +1639,7 @@ function metaBarB(m: MetaMetric): Record<string, string> {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: Consolas, Courier New, monospace;
 }
 
 .ic-tooltip.tip-visible {
@@ -1652,14 +1655,14 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 }
 
 .ic-tip-label {
-  font-size: 14px;
+  font-size: 11px;
   color: #888;
   font-weight: 500;
 }
 
 .ic-tip-pct {
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 700;
   color: #666;
   margin: 0 4px;

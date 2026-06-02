@@ -12,30 +12,10 @@
 import { computed } from "vue";
 import VChart from "vue-echarts";
 import { useAppState } from "../composables/useState";
-import { BENCHMARK_DESCRIPTIONS, BENCHMARK_LABELS } from "../types";
+import { BENCHMARK_DESCRIPTIONS, BENCHMARK_LABELS, BENCHMARK_ORDER, modelDisplayName } from "../types";
 import "echarts";
 
 const state = useAppState();
-
-const BENCHMARK_ORDER = [
-  "AA-Omniscience Non-Hallucination Rate",
-  "AA-Omniscience Accuracy",
-  "Terminal-Bench Hard",
-  "SciCode",
-  "CritPt",
-  "GDPval-AA",
-  "AA-LCR",
-  "τ²-Bench Telecom",
-  "IFBench",
-  "HLE",
-  "GPQA Diamond",
-];
-
-function modelDisplayName(m: { name: string } | null | undefined): string {
-  if (!m) return "A";
-  const idx = m.name.indexOf(": ");
-  return idx !== -1 ? m.name.slice(idx + 2) : m.name;
-}
 
 const chartOption = computed(() => {
   const a = state.modelA?.benchmarks ?? {};

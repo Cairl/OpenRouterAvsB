@@ -50,6 +50,40 @@ export interface BenchmarksResponse {
   exchange_rate: number;
 }
 
+export function modelDisplayName(m: { name: string } | null | undefined): string {
+  if (!m) return "A";
+  const idx = m.name.indexOf(": ");
+  return idx !== -1 ? m.name.slice(idx + 2) : m.name;
+}
+
+export const BENCHMARK_ORDER = [
+  "AA-Omniscience Non-Hallucination Rate",
+  "AA-Omniscience Accuracy",
+  "Terminal-Bench Hard",
+  "SciCode",
+  "CritPt",
+  "GDPval-AA",
+  "AA-LCR",
+  "τ²-Bench Telecom",
+  "IFBench",
+  "HLE",
+  "GPQA Diamond",
+];
+
+export const BENCHMARK_MAXES: Record<string, number> = {
+  "GPQA Diamond": 100,
+  "HLE": 50,
+  "IFBench": 100,
+  "τ²-Bench Telecom": 100,
+  "AA-LCR": 100,
+  "GDPval-AA": 70,
+  "CritPt": 100,
+  "AA-Omniscience Accuracy": 100,
+  "AA-Omniscience Non-Hallucination Rate": 100,
+  "SciCode": 60,
+  "Terminal-Bench Hard": 70,
+};
+
 export const BENCHMARK_LABELS: Record<string, string> = {
   "GPQA Diamond": "研究生级科学推理",
   "HLE": "人类最后的考试",

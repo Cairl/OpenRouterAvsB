@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -40,8 +41,6 @@ app.add_middleware(
 
 @app.get("/api/models")
 async def get_models(request: Request) -> list[ModelData]:
-    import asyncio
-
     session = request.app.state.http_session
     exchange_rate = await get_usd_cny_rate(session)
     info_map, slug_map = await fetch_models_info_and_slugs(session, MODELS)
