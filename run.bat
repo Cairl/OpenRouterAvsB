@@ -25,11 +25,10 @@ if not exist node_modules (
 cd ..
 
 start /b python -m uvicorn server.main:app --host 0.0.0.0 --port 8000
-timeout /t 3 /nobreak >nul
 cd web
 start /b npm run dev
 cd ..
-timeout /t 5 /nobreak >nul
+timeout /t 2 /nobreak >nul
 start http://localhost:5173
 
 :loop

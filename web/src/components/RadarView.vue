@@ -106,12 +106,15 @@ function onZrMouseMove(e: any) {
 const BENCHMARK_INDICATORS = [
   { key: "GPQA Diamond", max: 100 },
   { key: "HLE", max: 50 },
+  { key: "IFBench", max: 100 },
+  { key: "τ²-Bench Telecom", max: 100 },
+  { key: "AA-LCR", max: 100 },
+  { key: "GDPval-AA", max: 70 },
+  { key: "CritPt", max: 100 },
+  { key: "AA-Omniscience Accuracy", max: 100 },
+  { key: "AA-Omniscience Non-Hallucination Rate", max: 100 },
   { key: "SciCode", max: 60 },
   { key: "Terminal-Bench Hard", max: 70 },
-  { key: "AA-LCR", max: 100 },
-  { key: "IFBench", max: 100 },
-  { key: "GDPval-AA", max: 70 },
-  { key: "τ²-Bench Telecom", max: 100 },
 ];
 
 const N = BENCHMARK_INDICATORS.length;
@@ -145,14 +148,14 @@ const chartOption = computed(() => {
   return {
     tooltip: { show: false },
     title: {
-      text: `{swatch| } ${leadName} 多维能力覆盖面积领先 ${(lead * 100).toFixed(1)}%`,
+      text: `{swatch| } ${leadName} 多维能力覆盖面积领先 {pct|${(lead * 100).toFixed(1)}%}`,
       right: 10,
       top: 6,
       textStyle: {
         fontSize: 12,
         color: "#555",
         fontWeight: "normal",
-        fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontFamily: "Consolas, Courier New, monospace",
         rich: {
           swatch: {
             width: 14,
@@ -161,6 +164,12 @@ const chartOption = computed(() => {
             borderRadius: 3,
             padding: [0, 0, 0, 0],
             verticalAlign: "middle",
+          },
+          pct: {
+            fontSize: 12,
+            fontWeight: 700,
+            color: '#333',
+            fontFamily: 'Consolas, Courier New, monospace',
           },
         },
       },
@@ -172,18 +181,23 @@ const chartOption = computed(() => {
       itemWidth: 14,
       itemHeight: 14,
       icon: "roundRect",
-      textStyle: { fontSize: 11, fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
+      textStyle: { fontSize: 11, fontFamily: "Consolas, Courier New, monospace" },
     },
     radar: {
       indicator: BENCHMARK_INDICATORS.map((ind) => ({
-        name: BENCHMARK_LABELS[ind.key] ?? ind.key,
+        name: `{en|${ind.key}}\n{zh|${BENCHMARK_LABELS[ind.key] ?? ind.key}}`,
         max: ind.max,
       })),
       shape: "polygon",
       splitNumber: 5,
       center: ["50%", "54%"],
       radius: "60%",
-      axisName: { fontSize: 10, color: "#666", fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
+      axisName: {
+        rich: {
+          en: { fontSize: 10, fontWeight: 600, color: '#333', lineHeight: 14, fontFamily: 'Consolas, Courier New, monospace' },
+          zh: { fontSize: 9, fontWeight: 400, color: '#bbb', lineHeight: 12, fontFamily: 'Consolas, Courier New, monospace' },
+        },
+      },
     },
     series: [
       {
@@ -255,6 +269,7 @@ const nameB = computed(() => modelDisplayName(state.modelB));
   font-size: 12px;
   max-width: 240px;
   transform: translate(-50%, -100%);
+  font-family: "Consolas", "Courier New", monospace;
 }
 
 .tooltip-label {

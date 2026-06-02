@@ -1,6 +1,6 @@
 <template>
   <div class="content-section" v-if="!state.loading && state.modelA && state.modelB">
-    <div class="section-label">基准测试</div>
+    <div class="section-label"><span class="sl-zh">基准测试</span><span class="sl-en">BENCHMARKS</span></div>
     <div class="compare-row">
       <div class="compare-left">
         <TableView category="推理" />
@@ -13,11 +13,19 @@
     </div>
     <BarView />
   </div>
-  <div class="content-skeleton" v-else-if="state.loading">
-    <div class="section-label">基准测试</div>
-    <div class="skeleton-table">
-      <div class="skeleton-row" v-for="i in 6" :key="i"></div>
+  <div class="content-section content-section-empty" v-else-if="state.loading">
+    <div class="section-label"><span class="sl-zh">基准测试</span><span class="sl-en">BENCHMARKS</span></div>
+    <div class="compare-row">
+      <div class="compare-left">
+        <div class="empty-card"></div>
+        <div class="empty-card"></div>
+      </div>
+      <div class="compare-right">
+        <div class="empty-card"></div>
+        <div class="empty-card empty-card-radar"></div>
+      </div>
     </div>
+    <div class="empty-card empty-card-bar"></div>
   </div>
 </template>
 
@@ -32,7 +40,7 @@ const state = useAppState();
 
 <style scoped>
 .content-section,
-.content-skeleton {
+.content-section-empty {
   padding: 0 0 20px;
 }
 
@@ -57,37 +65,47 @@ const state = useAppState();
 }
 
 .section-label {
-  font-size: 12px;
-  color: var(--color-text-muted);
+  font-size: 20px;
   letter-spacing: 2px;
-  font-weight: 600;
-  margin-top: 16px;
-  margin-bottom: 10px;
+  font-weight: 700;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
-.skeleton-table {
+.sl-zh {
+  color: #777;
+  font-weight: 700;
+}
+
+.sl-en {
+  color: var(--color-text-muted);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 3px;
+}
+
+.content-section-empty {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.empty-card {
   background: var(--color-card-bg);
   border-radius: 10px;
-  overflow: hidden;
   border: 1px solid var(--color-border);
-  padding: 12px;
+  min-height: 120px;
 }
 
-.skeleton-row {
-  height: 32px;
-  background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 4px;
-  margin-bottom: 8px;
+.empty-card-radar {
+  flex: 1;
+  min-height: 280px;
 }
 
-.skeleton-row:last-child {
-  margin-bottom: 0;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+.empty-card-bar {
+  margin-top: 16px;
+  min-height: 300px;
 }
 </style>

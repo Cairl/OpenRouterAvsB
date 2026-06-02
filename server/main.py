@@ -1,6 +1,8 @@
 import logging
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+import aiohttp
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from server.config import MODELS
@@ -16,7 +18,16 @@ from server.scraper import (
 
 logging.basicConfig(level=logging.INFO)
 
-app = FastAPI(title="OpenRouterAvsB", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    connector = aiohttp.TCPConnector(enable_cleanup_closed=True)
+    app.state.http_session = aiohttp.ClientSession(connector=connector)
+    yield
+    await app.state.http_session.close()
+
+
+app = FastAPI(title="OpenRouterAvsB", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,19 +39,18 @@ app.add_middleware(
 
 
 @app.get("/api/models")
-async def get_models() -> list[ModelData]:
+async def get_models(request: Request) -> list[ModelData]:
     import asyncio
-    import aiohttp
 
-    async with aiohttp.ClientSession() as session:
-        exchange_rate = await get_usd_cny_rate(session)
-        info_map, slug_map = await fetch_models_info_and_slugs(session, MODELS)
+    session = request.app.state.http_session
+    exchange_rate = await get_usd_cny_rate(session)
+    info_map, slug_map = await fetch_models_info_and_slugs(session, MODELS)
 
-        async def _fetch_official(mid: str):
-            slug = slug_map.get(mid, mid)
-            return await fetch_effective_pricing(session, slug, mid)
+    async def _fetch_official(mid: str):
+        slug = slug_map.get(mid, mid)
+        return await fetch_effective_pricing(session, slug, mid)
 
-        pricing_results = await asyncio.gather(*[_fetch_official(mid) for mid in MODELS])
+    pricing_results = await asyncio.gather(*[_fetch_official(mid) for mid in MODELS])
 
     data = []
     for mid, effective_pricing in zip(MODELS, pricing_results):
@@ -57,10 +67,12 @@ async def get_models() -> list[ModelData]:
 
 
 @app.get("/api/benchmarks")
-async def get_benchmarks() -> BenchmarksResponse:
-    return await scrape_all_benchmarks(MODELS)
+async def get_benchmarks(request: Request) -> BenchmarksResponse:
+    session = request.app.state.http_session
+    return await scrape_all_benchmarks(session, MODELS)
 
 
 @app.get("/api/benchmarks/{model_id:path}")
-async def get_benchmark(model_id: str) -> ModelData:
-    return await scrape_single_benchmark(model_id)
+async def get_benchmark(model_id: str, request: Request) -> ModelData:
+    session = request.app.state.http_session
+    return await scrape_single_benchmark(session, model_id)

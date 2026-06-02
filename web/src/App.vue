@@ -1,6 +1,6 @@
 <template>
   <div class="app">
-    <div class="openrouter-watermark">OpenRouter</div>
+    <div class="openrouter-watermark"><span class="wm-letter" style="--i:0">O</span><span class="wm-letter" style="--i:1">p</span><span class="wm-letter" style="--i:2">e</span><span class="wm-letter" style="--i:3">n</span><span class="wm-letter" style="--i:4">R</span><span class="wm-letter" style="--i:5">o</span><span class="wm-letter" style="--i:6">u</span><span class="wm-letter" style="--i:7">t</span><span class="wm-letter" style="--i:8">e</span><span class="wm-letter" style="--i:9">r</span></div>
     <NavBar />
     <main class="main">
       <ModelSelector />
@@ -43,20 +43,49 @@ onMounted(() => {
 
 .openrouter-watermark {
   position: fixed;
-  left: 24vw;
-  top: 100px;
+  left: 18vw;
+  top: 60px;
   transform: perspective(1200px) rotateY(5deg) rotate(2deg);
-  font-family: Arial, 'Helvetica Neue', sans-serif;
+  font-family: "Consolas", "Courier New", monospace;
   font-size: 72px;
   font-weight: 300;
-  letter-spacing: 6px;
   white-space: nowrap;
   color: rgba(170, 175, 185, 0.18);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 8px rgba(0, 0, 0, 0.02);
   pointer-events: none;
   user-select: none;
   z-index: -1;
-  mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.15) 100%);
-  -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.15) 100%);
+  overflow: visible;
+  padding: 40px 60px;
+  mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 65%, rgba(0,0,0,0.5) 85%, rgba(0,0,0,0.25) 100%);
+  -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 65%, rgba(0,0,0,0.5) 85%, rgba(0,0,0,0.25) 100%);
+}
+
+.wm-letter {
+  display: inline-block;
+  margin: 0 4px;
+  will-change: transform, rotate;
+  animation: wm-rotate 18s cubic-bezier(0.37, 0, 0.63, 1) infinite,
+             wm-drift 13s cubic-bezier(0.37, 0, 0.63, 1) infinite,
+             wm-bob 21s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation-delay: calc(var(--i) * -1.7s), calc(var(--i) * -2.1s), calc(var(--i) * -2.7s);
+}
+
+@keyframes wm-rotate {
+  0%, 100% { rotate: -20deg; }
+  50% { rotate: 20deg; }
+}
+
+@keyframes wm-drift {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(18px); }
+  50% { transform: translateX(0); }
+  75% { transform: translateX(-18px); }
+}
+
+@keyframes wm-bob {
+  0%, 100% { transform: translateY(0); }
+  33% { transform: translateY(-6px); }
+  66% { transform: translateY(6px); }
 }
 </style>

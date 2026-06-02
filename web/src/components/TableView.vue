@@ -6,10 +6,9 @@
           <tr>
             <th class="cat-title">
               <span class="cat-text">{{ cat.name }} {{ CATEGORY_EN[cat.name] ?? '' }}</span>
-              <span class="cat-line"></span>
             </th>
-            <th class="color-a"><span class="model-swatch a"></span>A</th>
-            <th class="color-b"><span class="model-swatch b"></span>B</th>
+            <th class="color-a"><span class="th-swatch-wrap"><span class="model-swatch a"></span>A</span></th>
+            <th class="color-b"><span class="th-swatch-wrap"><span class="model-swatch b"></span>B</span></th>
             <th></th>
           </tr>
         </thead>
@@ -181,17 +180,21 @@ function formatDelta(d: number | null): string {
 
 const infoVisible = ref(false);
 const infoText = ref("");
+const infoKey = ref("");
 const infoHtml = computed(() => {
-  if (!infoText.value) return "";
+  if (!infoText.value && !infoKey.value) return "";
+  const key = infoKey.value;
   const colonIdx = infoText.value.indexOf("：");
-  if (colonIdx === -1) return infoText.value;
-  const label = infoText.value.slice(0, colonIdx);
-  const desc = infoText.value.slice(colonIdx + 1);
-  const spaceIdx = label.indexOf(" ");
-  if (spaceIdx === -1) return `<div style="font-weight:600;font-size:10px;color:#333;line-height:1.4;white-space:nowrap">${label}</div><div style="font-size:12px;color:#888;line-height:1.7;margin-top:4px">${desc}</div>`;
-  const en = label.slice(0, spaceIdx);
-  const zh = label.slice(spaceIdx + 1);
-  return `<div style="font-weight:600;font-size:10px;color:#333;line-height:1.4;white-space:nowrap">${en}</div><div style="font-weight:400;font-size:9px;color:#bbb;line-height:1.4;white-space:nowrap">${zh}</div><div style="font-size:12px;color:#888;line-height:1.7;margin-top:4px">${desc}</div>`;
+  const desc = colonIdx !== -1 ? infoText.value.slice(colonIdx + 1) : "";
+  const zhLabel = colonIdx !== -1 ? infoText.value.slice(0, colonIdx) : infoText.value;
+  let html = `<div style="font-weight:600;font-size:10px;color:#333;line-height:1.4;white-space:nowrap">${key}</div>`;
+  if (zhLabel && zhLabel !== key) {
+    html += `<div style="font-weight:400;font-size:9px;color:#bbb;line-height:1.4;white-space:nowrap">${zhLabel}</div>`;
+  }
+  if (desc) {
+    html += `<div style="font-size:12px;color:#888;line-height:1.7;margin-top:4px">${desc}</div>`;
+  }
+  return html;
 });
 const infoStyle = ref<Record<string, string>>({});
 let infoLeaveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -201,10 +204,10 @@ function onInfoEnter(e: MouseEvent, key: string) {
     clearTimeout(infoLeaveTimer);
     infoLeaveTimer = null;
   }
+  infoKey.value = key;
   const zhLabel = BENCHMARK_LABELS[key] ?? "";
-  const label = zhLabel ? `${key} ${zhLabel}` : key;
   const desc = BENCHMARK_DESCRIPTIONS[key] ?? "";
-  infoText.value = desc ? `${label}：${desc}` : label;
+  infoText.value = desc ? `${zhLabel}：${desc}` : zhLabel;
   infoVisible.value = true;
   updateInfoPos(e);
 }
@@ -248,15 +251,6 @@ function updateInfoPos(e: MouseEvent) {
   color: #aaa;
 }
 
-.cat-line {
-  display: inline-block;
-  width: 40px;
-  height: 1px;
-  background: #ddd;
-  vertical-align: -1px;
-  margin-left: 8px;
-}
-
 table {
   width: 100%;
   border-collapse: collapse;
@@ -297,13 +291,18 @@ th.color-b {
   color: var(--color-b);
 }
 
+.th-swatch-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .model-swatch {
   display: inline-block;
   width: 10px;
   height: 10px;
   border-radius: 3px;
   vertical-align: middle;
-  margin-right: 4px;
 }
 
 .model-swatch.a {
@@ -332,6 +331,7 @@ td:first-child {
 .benchmark-name {
   display: inline-block;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .benchmark-en {
@@ -431,7 +431,7 @@ td:nth-child(3).highlight {
 .bench-tooltip {
   position: fixed;
   z-index: 1000;
-  max-width: 320px;
+  max-width: 400px;
   padding: 10px 14px;
   background: #fff;
   border-radius: 8px;

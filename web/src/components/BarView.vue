@@ -1,6 +1,10 @@
 <template>
   <div class="chart-container">
-    <v-chart :option="chartOption" :init-options="{ renderer: 'svg' }" autoresize />
+    <v-chart
+      :option="chartOption"
+      :init-options="{ renderer: 'svg' }"
+      autoresize
+    />
   </div>
 </template>
 
@@ -13,22 +17,19 @@ import "echarts";
 
 const state = useAppState();
 
-const BENCHMARK_CATEGORIES: Record<string, string> = {
-  "GPQA Diamond": "推理",
-  "HLE": "推理",
-  "IFBench": "推理",
-  "τ²-Bench Telecom": "推理",
-  "AA-LCR": "推理",
-  "GDPval-AA": "推理",
-  "CritPt": "推理",
-  "SciCode": "编程",
-  "Terminal-Bench Hard": "编程",
-  "AA-Omniscience Accuracy": "知识",
-  "AA-Omniscience Non-Hallucination Rate": "知识",
-  "AA-Omniscience Hallucination Rate": "知识",
-};
-
-const CATEGORY_ORDER = ["推理", "知识", "编程"];
+const BENCHMARK_ORDER = [
+  "AA-Omniscience Non-Hallucination Rate",
+  "AA-Omniscience Accuracy",
+  "Terminal-Bench Hard",
+  "SciCode",
+  "CritPt",
+  "GDPval-AA",
+  "AA-LCR",
+  "τ²-Bench Telecom",
+  "IFBench",
+  "HLE",
+  "GPQA Diamond",
+];
 
 function modelDisplayName(m: { name: string } | null | undefined): string {
   if (!m) return "A";
@@ -39,55 +40,56 @@ function modelDisplayName(m: { name: string } | null | undefined): string {
 const chartOption = computed(() => {
   const a = state.modelA?.benchmarks ?? {};
   const b = state.modelB?.benchmarks ?? {};
-  const rawKeys = Object.keys(a).length >= Object.keys(b).length ? Object.keys(a) : Object.keys(b);
-  const allKeys: string[] = [];
-  let firstCat = true;
-  for (const cat of CATEGORY_ORDER) {
-    const catKeys = rawKeys.filter(k => (BENCHMARK_CATEGORIES[k] ?? "其他") === cat);
-    if (catKeys.length === 0) continue;
-    if (!firstCat) allKeys.push("");
-    for (const k of catKeys) allKeys.push(k);
-    firstCat = false;
-  }
-  const otherKeys = rawKeys.filter(k => !BENCHMARK_CATEGORIES[k]);
-  if (otherKeys.length > 0) {
-    if (!firstCat) allKeys.push("");
-    for (const k of otherKeys) allKeys.push(k);
-  }
+  const allKeySet = new Set([...Object.keys(a), ...Object.keys(b)]);
+  const allKeys = BENCHMARK_ORDER.filter(k => allKeySet.has(k));
+  const remaining = Array.from(allKeySet).filter(k => !BENCHMARK_ORDER.includes(k));
+  for (const k of remaining) allKeys.push(k);
 
   const nameA = modelDisplayName(state.modelA);
   const nameB = modelDisplayName(state.modelB);
 
   return {
     tooltip: {
-      trigger: "axis",
-      axisPointer: { type: "shadow" },
-      extraCssText: "max-width:280px;white-space:normal;word-break:break-all;",
-      formatter: (params: any[]) => {
-        const idx = params[0]?.dataIndex ?? 0;
-        const key = allKeys[idx];
-        if (!key) return "";
+      trigger: 'axis',
+      backgroundColor: '#fff',
+      borderColor: 'transparent',
+      borderRadius: 8,
+      borderWidth: 0,
+      padding: [10, 14],
+      extraCssText: 'box-shadow:0 4px 16px rgba(0,0,0,0.1),0 0 0 1px rgba(0,0,0,0.04);border-radius:8px',
+      formatter: (params: any) => {
+        if (!params || !params.length) return '';
+        const p = params[0];
+        const key = p.axisValue;
         const label = BENCHMARK_LABELS[key] ?? key;
         const desc = BENCHMARK_DESCRIPTIONS[key];
-        let html = `<div style="font-weight:600;font-size:10px;color:#333;line-height:1.4;white-space:nowrap">${key}</div><div style="font-weight:400;font-size:9px;color:#bbb;line-height:1.4;white-space:nowrap">${label}</div>`;
-        if (desc) html += `<div style="font-size:12px;color:#888;line-height:1.7;margin-top:4px">${desc}</div>`;
-        for (const p of params) {
-          html += `<div style="font-size:12px;line-height:1.6">${p.marker} ${p.seriesName}: <b>${p.value.toFixed(1)}%</b></div>`;
-        }
+        const va = a[key] ?? 0;
+        const vb = b[key] ?? 0;
+        const rectA = '<span style="display:inline-block;width:14px;height:8px;border-radius:2px;background:rgba(111,163,167,0.6);vertical-align:middle;margin-right:6px"></span>';
+        const rectB = '<span style="display:inline-block;width:14px;height:8px;border-radius:2px;background:rgba(232,168,130,0.6);vertical-align:middle;margin-right:6px"></span>';
+        let html = `<div style="max-width:400px;white-space:normal;font-family:Consolas,Courier New,monospace">`;
+        html += `<div style="font-weight:600;font-size:10px;color:#333;line-height:1.4;white-space:nowrap">${key}</div>`;
+        if (label !== key) html += `<div style="font-weight:400;font-size:9px;color:#bbb;line-height:1.4;white-space:nowrap">${label}</div>`;
+        if (desc) html += `<div style="font-size:12px;color:#888;line-height:1.7;margin-top:4px;word-break:break-word;white-space:normal">${desc}</div>`;
+        html += `<div style="margin-top:6px;border-top:1px solid #f0f0f0;padding-top:6px;white-space:nowrap">`;
+        html += `<div style="font-size:12px;line-height:1.7;color:#888;white-space:nowrap">${rectA}${nameA} <b style="color:#333">${va.toFixed(1)}%</b></div>`;
+        html += `<div style="font-size:12px;line-height:1.7;color:#888;white-space:nowrap">${rectB}${nameB} <b style="color:#333">${vb.toFixed(1)}%</b></div>`;
+        html += `</div></div>`;
         return html;
       },
     },
-    legend: { data: [nameA, nameB], left: 0, top: 0, textStyle: { fontSize: 11 } },
-    grid: { left: 180, right: 40, top: 30, bottom: 40 },
-    xAxis: { type: "value", axisLabel: { fontSize: 10 } },
+    legend: { data: [nameA, nameB], left: 0, bottom: 0, textStyle: { fontSize: 11, fontFamily: "Consolas" } },
+    grid: { left: 250, right: 40, top: 16, bottom: 50 },
+    xAxis: { type: "value", min: 0, axisLabel: { fontSize: 10, fontFamily: "Consolas" } },
     yAxis: {
       type: "category",
       data: allKeys.map((k) => k),
       axisLabel: {
-        fontSize: 10,
+        fontSize: 11,
+        fontFamily: "Consolas",
         rich: {
-          en: { fontSize: 9, color: "#333", fontWeight: 600, lineHeight: 16 },
-          zh: { fontSize: 8, color: "#bbb", lineHeight: 14 },
+          en: { fontSize: 11, color: "#333", fontWeight: 600, lineHeight: 16, fontFamily: "Consolas" },
+          zh: { fontSize: 11, color: "#bbb", lineHeight: 14, fontFamily: "Consolas" },
         },
         formatter: (val: string) => {
           if (!val) return " ";
@@ -129,10 +131,11 @@ const chartOption = computed(() => {
   border: 1px solid var(--color-border);
   padding: 16px;
   margin-top: 16px;
+  position: relative;
 }
 
 .chart-container :deep(.echarts) {
   width: 100%;
-  height: 500px;
+  height: 600px;
 }
 </style>

@@ -335,23 +335,22 @@ async def _fetch_model_all_data(
     return model_id, benchmarks_data, design_arena_data, effective_pricing
 
 
-async def scrape_all_benchmarks(model_ids: list[str]) -> BenchmarksResponse:
-    async with aiohttp.ClientSession() as session:
-        exchange_rate = await get_usd_cny_rate(session)
-        info_map, slug_map = await fetch_models_info_and_slugs(session, model_ids)
+async def scrape_all_benchmarks(session: aiohttp.ClientSession, model_ids: list[str]) -> BenchmarksResponse:
+    exchange_rate = await get_usd_cny_rate(session)
+    info_map, slug_map = await fetch_models_info_and_slugs(session, model_ids)
 
-        semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
-        async def _limited_fetch(mid: str, slug: str):
-            async with semaphore:
-                return await _fetch_model_all_data(session, mid, slug)
+    async def _limited_fetch(mid: str, slug: str):
+        async with semaphore:
+            return await _fetch_model_all_data(session, mid, slug)
 
-        tasks = []
-        for mid in model_ids:
-            slug = slug_map.get(mid, mid)
-            tasks.append(_limited_fetch(mid, slug))
+    tasks = []
+    for mid in model_ids:
+        slug = slug_map.get(mid, mid)
+        tasks.append(_limited_fetch(mid, slug))
 
-        results = await asyncio.gather(*tasks)
+    results = await asyncio.gather(*tasks)
 
     data: list[ModelData] = []
     failed: list[str] = []
@@ -364,16 +363,15 @@ async def scrape_all_benchmarks(model_ids: list[str]) -> BenchmarksResponse:
     return BenchmarksResponse(data=data, failed=failed, exchange_rate=exchange_rate)
 
 
-async def scrape_single_benchmark(model_id: str) -> ModelData:
-    async with aiohttp.ClientSession() as session:
-        exchange_rate = await get_usd_cny_rate(session)
-        info_map, slug_map = await fetch_models_info_and_slugs(session, [model_id])
-        slug = slug_map.get(model_id, model_id)
-        benchmarks_data, design_arena_data, effective_pricing = await asyncio.gather(
-            fetch_model_benchmarks(session, slug, model_id),
-            fetch_design_arena(session, slug),
-            fetch_effective_pricing(session, slug, model_id),
-        )
-        return build_model_data(
-            model_id, info_map.get(model_id), benchmarks_data, design_arena_data, exchange_rate, effective_pricing
-        )
+async def scrape_single_benchmark(session: aiohttp.ClientSession, model_id: str) -> ModelData:
+    exchange_rate = await get_usd_cny_rate(session)
+    info_map, slug_map = await fetch_models_info_and_slugs(session, [model_id])
+    slug = slug_map.get(model_id, model_id)
+    benchmarks_data, design_arena_data, effective_pricing = await asyncio.gather(
+        fetch_model_benchmarks(session, slug, model_id),
+        fetch_design_arena(session, slug),
+        fetch_effective_pricing(session, slug, model_id),
+    )
+    return build_model_data(
+        model_id, info_map.get(model_id), benchmarks_data, design_arena_data, exchange_rate, effective_pricing
+    )

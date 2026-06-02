@@ -1,6 +1,6 @@
 <template>
   <div class="selector-area" v-if="!state.loading">
-    <div class="section-label">选择模型</div>
+    <div class="section-label"><span class="sl-zh">模型选择</span><span class="sl-en">MODEL</span></div>
     <div class="split-selectors">
       <div class="split-card split-card-a">
         <div class="split-model split-a">
@@ -36,7 +36,7 @@
               </div>
             </Transition>
           </div>
-          <span class="model-date" v-if="state.modelA?.created">{{ formatDate(state.modelA.created) }}</span>
+          <span class="model-date" v-if="state.modelA?.created">发布日期：{{ formatDate(state.modelA.created) }}</span>
         </div>
       </div>
       <div class="shrink-spacer shrink-spacer-a"></div>
@@ -82,14 +82,14 @@
               </div>
             </Transition>
           </div>
-          <span class="model-date" v-if="state.modelB?.created">{{ formatDate(state.modelB.created) }}</span>
+          <span class="model-date" v-if="state.modelB?.created">发布日期：{{ formatDate(state.modelB.created) }}</span>
         </div>
       </div>
     </div>
 
     <div class="index-cards" v-if="state.modelA && state.modelB">
       <div class="index-card" v-for="idx in indices" :key="idx.key">
-        <div class="ic-label">{{ idx.shortLabel }}</div>
+        <div class="ic-label"><div class="ic-label-zh">{{ idx.shortLabel }}</div><div class="ic-label-en">{{ idx.labelEn }}</div></div>
         <div class="ic-vals">
           <span class="ic-val a">{{ formatIndexValue(idx.valueA) }}</span>
           <span class="ic-val b">{{ formatIndexValue(idx.valueB) }}</span>
@@ -100,7 +100,9 @@
           <div class="ic-bar-b" :style="barStyleB(idx)"></div>
           <div class="ic-dot" :class="[dotClass(idx), { 'ic-dot-hover': idxHover && idxHover.key === idx.key }]" :style="dotStyle(idx)"></div>
           <div class="ic-tooltip" :class="idxTooltipClass(idx)" :style="idxTooltipStyle(idx)">
-            <span class="ic-tip-text">{{ idxHover?.text }}</span>
+            <span class="ic-tip-label">表现领先 </span>
+            <span class="ic-tip-pct">{{ idxHover?.pct }}%</span>
+            <span class="ic-tip-label"> 同类模型</span>
           </div>
         </div>
       </div>
@@ -108,15 +110,25 @@
 
     <div class="meta-cards" v-if="state.modelA && state.modelB">
       <div class="meta-card" v-for="m in metaMetrics" :key="m.key">
-        <div class="mc-label">{{ m.label }}</div>
+        <div class="mc-label"><div class="mc-label-zh">{{ m.label }}</div><div class="mc-label-en">{{ m.labelEn }}</div></div>
         <div class="mc-vals">
           <div class="mc-val-wrap a" :class="{ 'mc-wins': m.winner === 'a' }">
-            <span class="mc-price-main">{{ m.displayA }}</span>
-            <span class="mc-tip-unit" v-if="m.usdA">¥<span class="mc-per-unit" v-if="m.key === 'input' || m.key === 'output'">/M tokens</span></span>
+            <template v-if="m.key === 'ctx'">
+              <span class="mc-price-main">{{ m.displayNumA }}</span><span class="mc-ctx-unit" v-if="m.displayUnitA">{{ m.displayUnitA }}</span>
+            </template>
+            <template v-else>
+              <span class="mc-price-main">{{ m.displayA }}</span>
+              <span class="mc-tip-unit" v-if="m.usdA">¥<span class="mc-per-unit">/M tokens</span></span>
+            </template>
           </div>
           <div class="mc-val-wrap b" :class="{ 'mc-wins': m.winner === 'b' }">
-            <span class="mc-price-main">{{ m.displayB }}</span>
-            <span class="mc-tip-unit" v-if="m.usdB">¥<span class="mc-per-unit" v-if="m.key === 'input' || m.key === 'output'">/M tokens</span></span>
+            <template v-if="m.key === 'ctx'">
+              <span class="mc-price-main">{{ m.displayNumB }}</span><span class="mc-ctx-unit" v-if="m.displayUnitB">{{ m.displayUnitB }}</span>
+            </template>
+            <template v-else>
+              <span class="mc-price-main">{{ m.displayB }}</span>
+              <span class="mc-tip-unit" v-if="m.usdB">¥<span class="mc-per-unit">/M tokens</span></span>
+            </template>
           </div>
         </div>
         <div class="mc-chart" :data-side="metaHover && metaHover.key === m.key ? metaHover.side : ''" @mousemove="onMetaMouseMove($event, m)" @mouseleave="metaHover = null">
@@ -126,13 +138,13 @@
           <div class="mc-dot" :class="[metaDotClass(m), { 'mc-dot-hover': metaHover && metaHover.key === m.key }]" :style="metaDotStyle(m)"></div>
           <div class="mc-tooltip" :class="metaTooltipClass(m)" :style="metaTooltipStyle(m)">
               <template v-if="m.key === 'ctx'">
-                <span class="mc-tip-label">最大输出</span>
-                <span class="mc-tip-value">{{ (metaHover?.side === 'a' ? m.maxOutputA : m.maxOutputB) ? formatCompactNumber(metaHover?.side === 'a' ? m.maxOutputA : m.maxOutputB) : '—' }}</span>
+                <span class="mc-tip-label">最大输出长度 </span>
+                <span class="mc-tip-ctx-val">{{ formatCtxTooltipNum(m) }}</span><span class="mc-ctx-unit" v-if="formatCtxTooltipUnit(m)">{{ formatCtxTooltipUnit(m) }}</span>
               </template>
               <template v-else>
                 <span class="mc-tip-currency">USD</span>
                 <span class="mc-tip-value">{{ metaHover?.usd?.replace('$', '') }}</span>
-                <span class="mc-tip-unit">$</span>
+                <span class="mc-tip-unit">$<span class="mc-per-unit">/M tokens</span></span>
               </template>
             </div>
         </div>
@@ -155,10 +167,35 @@
       </div>
     </div>
   </div>
-  <div class="selector-skeleton" v-else>
-    <div class="skeleton-card"></div>
-    <div class="skeleton-vs">VS</div>
-    <div class="skeleton-card"></div>
+  <div class="selector-area selector-area-empty" v-else>
+    <div class="section-label"><span class="sl-zh">模型选择</span><span class="sl-en">MODEL</span></div>
+    <div class="split-selectors">
+      <div class="split-card split-card-a">
+        <div class="split-model split-a">
+          <div class="model-chip-wrap">
+            <div class="model-chip chip-a">
+              <input placeholder="输入模型 ID..." disabled />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="split-vs" style="opacity:0.3">
+        <span class="vs-label a">A</span>
+        <span class="vs-divider">VS</span>
+        <span class="vs-exclaim exclaim-left">!</span>
+        <span class="vs-exclaim exclaim-right">!</span>
+        <span class="vs-label b">B</span>
+      </div>
+      <div class="split-card split-card-b">
+        <div class="split-model split-b">
+          <div class="model-chip-wrap">
+            <div class="model-chip chip-b">
+              <input placeholder="输入模型 ID..." disabled />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -509,9 +546,9 @@ const indices = computed(() => {
   const pctA = state.modelA?.aa_percentiles;
   const pctB = state.modelB?.aa_percentiles;
   return [
-    { key: "intelligence", label: "智能指数", shortLabel: "智能指数", valueA: a?.intelligence ?? null, valueB: b?.intelligence ?? null, max: 70, pctA: pctA?.intelligence_percentile ?? null, pctB: pctB?.intelligence_percentile ?? null },
-    { key: "coding", label: "编程指数", shortLabel: "编程指数", valueA: a?.coding ?? null, valueB: b?.coding ?? null, max: 60, pctA: pctA?.coding_percentile ?? null, pctB: pctB?.coding_percentile ?? null },
-    { key: "agentic", label: "自主指数", shortLabel: "自主指数", valueA: a?.agentic ?? null, valueB: b?.agentic ?? null, max: 80, pctA: pctA?.agentic_percentile ?? null, pctB: pctB?.agentic_percentile ?? null },
+    { key: "intelligence", label: "智能指数", shortLabel: "智能指数", labelEn: "Intelligence Index", valueA: a?.intelligence ?? null, valueB: b?.intelligence ?? null, max: 70, pctA: pctA?.intelligence_percentile ?? null, pctB: pctB?.intelligence_percentile ?? null },
+    { key: "coding", label: "编程指数", shortLabel: "编程指数", labelEn: "Coding Index", valueA: a?.coding ?? null, valueB: b?.coding ?? null, max: 60, pctA: pctA?.coding_percentile ?? null, pctB: pctB?.coding_percentile ?? null },
+    { key: "agentic", label: "自主指数", shortLabel: "自主指数", labelEn: "Agentic Index", valueA: a?.agentic ?? null, valueB: b?.agentic ?? null, max: 80, pctA: pctA?.agentic_percentile ?? null, pctB: pctB?.agentic_percentile ?? null },
   ];
 });
 
@@ -555,10 +592,15 @@ function barStyleB(idx: { valueA: number | null; valueB: number | null; max: num
 interface MetaMetric {
   key: string;
   label: string;
+  labelEn: string;
   valueA: number;
   valueB: number;
   displayA: string;
   displayB: string;
+  displayNumA: string;
+  displayUnitA: string;
+  displayNumB: string;
+  displayUnitB: string;
   usdA: string | null;
   usdB: string | null;
   higherIsBetter: boolean;
@@ -590,10 +632,15 @@ const metaMetrics = computed((): MetaMetric[] => {
     {
       key: "ctx",
       label: "上下文长度",
+      labelEn: "Total Context",
       valueA: ctxA,
       valueB: ctxB,
       displayA: formatCompactNumber(ctxA),
       displayB: formatCompactNumber(ctxB),
+      displayNumA: ctxA >= 1_000 ? (ctxA / 1_000).toFixed(1) : ctxA.toLocaleString("en-US"),
+      displayUnitA: ctxA >= 1_000 ? "K" : "",
+      displayNumB: ctxB >= 1_000 ? (ctxB / 1_000).toFixed(1) : ctxB.toLocaleString("en-US"),
+      displayUnitB: ctxB >= 1_000 ? "K" : "",
       usdA: null,
       usdB: null,
       higherIsBetter: true,
@@ -605,10 +652,15 @@ const metaMetrics = computed((): MetaMetric[] => {
     {
       key: "input",
       label: "输入价格",
+      labelEn: "Input Price",
       valueA: inA,
       valueB: inB,
       displayA: formatCNY(a.pricing.prompt_per_m),
       displayB: formatCNY(b.pricing.prompt_per_m),
+      displayNumA: "",
+      displayUnitA: "",
+      displayNumB: "",
+      displayUnitB: "",
       usdA: `${inA.toFixed(2)}$`,
       usdB: `${inB.toFixed(2)}$`,
       higherIsBetter: false,
@@ -620,10 +672,15 @@ const metaMetrics = computed((): MetaMetric[] => {
     {
       key: "output",
       label: "输出价格",
+      labelEn: "Output Price",
       valueA: outA,
       valueB: outB,
       displayA: formatCNY(a.pricing.completion_per_m),
       displayB: formatCNY(b.pricing.completion_per_m),
+      displayNumA: "",
+      displayUnitA: "",
+      displayNumB: "",
+      displayUnitB: "",
       usdA: `${outA.toFixed(2)}$`,
       usdB: `${outB.toFixed(2)}$`,
       higherIsBetter: false,
@@ -640,13 +697,26 @@ function formatCompactNumber(v: number): string {
   return v.toLocaleString("en-US");
 }
 
+function formatCtxTooltipNum(m: MetaMetric): string {
+  const v = metaHover.value?.side === 'a' ? m.maxOutputA : m.maxOutputB;
+  if (!v) return '—';
+  if (v >= 1_000) return (v / 1_000).toFixed(1);
+  return v.toLocaleString("en-US");
+}
+
+function formatCtxTooltipUnit(m: MetaMetric): string {
+  const v = metaHover.value?.side === 'a' ? m.maxOutputA : m.maxOutputB;
+  if (!v || v < 1_000) return '';
+  return 'K';
+}
+
 function formatCNY(cny: number): string {
   return cny.toFixed(2);
 }
 
 const metaHover = ref<{ key: string; side: string; usd: string | null; mouseX: number } | null>(null);
 
-const idxHover = ref<{ key: string; side: string; text: string | null; mouseX: number } | null>(null);
+const idxHover = ref<{ key: string; side: string; text: string | null; pct: number | null; mouseX: number } | null>(null);
 
 function onIdxMouseMove(e: MouseEvent, idx: { key: string; valueA: number | null; valueB: number | null; max: number; pctA: number | null; pctB: number | null }) {
   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -656,7 +726,7 @@ function onIdxMouseMove(e: MouseEvent, idx: { key: string; valueA: number | null
   const side = ratio < pos ? "a" : "b";
   const pct = side === "a" ? idx.pctA : idx.pctB;
   const text = pct !== null ? `领先 ${pct}% 同类模型` : null;
-  idxHover.value = { key: idx.key, side, text, mouseX: x };
+  idxHover.value = { key: idx.key, side, text, pct, mouseX: x };
 }
 
 const idxTooltipCache: Record<string, string> = {};
@@ -748,11 +818,25 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 }
 
 .section-label {
-  font-size: 12px;
-  color: var(--color-text-muted);
+  font-size: 20px;
   letter-spacing: 2px;
-  font-weight: 600;
-  margin-bottom: 10px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sl-zh {
+  color: #777;
+  font-weight: 700;
+}
+
+.sl-en {
+  color: var(--color-text-muted);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 3px;
 }
 
 .split-selectors {
@@ -835,9 +919,9 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 }
 
 .vs-label {
-  font-family: Georgia, serif;
+  font-family: "Consolas", "Courier New", monospace;
   font-size: 80px;
-  font-weight: 700;
+  font-weight: 900;
   font-style: italic;
   line-height: 0.7;
   margin-top: -36px;
@@ -887,9 +971,9 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 }
 
 .vs-divider {
-  font-family: Georgia, serif;
+  font-family: "Consolas", "Courier New", monospace;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 900;
   font-style: italic;
   color: var(--color-text-muted);
   letter-spacing: 2px;
@@ -912,16 +996,17 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 .vs-exclaim {
   position: absolute;
   top: -70px;
-  font-family: Georgia, serif;
+  font-family: "Consolas", "Courier New", monospace;
   font-size: 48px;
-  font-weight: 700;
+  font-weight: 900;
   font-style: italic;
   opacity: 0;
   pointer-events: none;
   z-index: 5;
-  color: #bbb;
+  color: #FFD700;
   transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
   transform-origin: center bottom;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
 }
 
 .exclaim-left {
@@ -939,13 +1024,13 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 }
 
 .split-vs[data-hover="vs"] .exclaim-left {
-  opacity: 0.6;
+  opacity: 1;
   transform: rotate(calc(-15deg + var(--wobble-vs))) translateY(0);
   transition-delay: 1s, 0s;
 }
 
 .split-vs[data-hover="vs"] .exclaim-right {
-  opacity: 0.6;
+  opacity: 1;
   transform: rotate(calc(15deg + var(--wobble-vs))) translateY(0);
   transition-delay: 1s, 0s;
 }
@@ -990,7 +1075,7 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 
 .model-chip input::placeholder {
   color: rgba(0, 0, 0, 0.25);
-  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-family: "Consolas", "Courier New", monospace;
   font-weight: 400;
 }
 
@@ -1034,6 +1119,7 @@ function metaBarB(m: MetaMetric): Record<string, string> {
   z-index: 100;
   max-height: 260px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
 }
@@ -1134,11 +1220,28 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 }
 
 .mc-label {
-  font-size: 10px;
+  font-size: 16px;
   color: var(--color-text-secondary);
   text-align: center;
   letter-spacing: 0.5px;
   font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mc-label-zh {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.mc-label-en {
+  font-size: 9px;
+  font-weight: 500;
+  color: #bbb;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .mc-vals {
@@ -1165,7 +1268,7 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 
 .mc-price-main {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 700;
   line-height: 1;
 }
@@ -1184,8 +1287,8 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 
 .mc-tooltip {
   position: absolute;
-  top: -36px;
-  padding: 4px 10px;
+  top: -44px;
+  padding: 6px 14px;
   background: #fff;
   border-radius: 8px;
   white-space: nowrap;
@@ -1213,29 +1316,45 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 }
 
 .mc-tip-currency {
-  font-size: 9px;
+  font-size: 14px;
   color: #aaa;
   font-weight: 600;
   letter-spacing: 0.5px;
 }
 
 .mc-tip-label {
-  font-size: 9px;
-  color: #aaa;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-size: 14px;
+  color: #888;
+  font-weight: 500;
   margin-right: 4px;
 }
 
 .mc-tip-value {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 700;
   color: #444;
 }
 
+.mc-tip-ctx-val {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: #666;
+  margin: 0 4px;
+  white-space: nowrap;
+}
+
+.mc-ctx-unit {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: #999;
+  margin-left: 1px;
+}
+
 .mc-tip-unit {
-  font-size: 11px;
+  font-size: 16px;
   color: #999;
   font-weight: 500;
 }
@@ -1254,15 +1373,23 @@ function metaBarB(m: MetaMetric): Record<string, string> {
   color: var(--color-b);
 }
 
+.mc-tooltip.tip-a .mc-tip-ctx-val {
+  color: var(--color-a);
+}
+
+.mc-tooltip.tip-b .mc-tip-ctx-val {
+  color: var(--color-b);
+}
+
 .mc-tooltip::after {
   content: "";
   position: absolute;
   bottom: -4px;
   left: 50%;
   transform: translateX(-50%);
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid #fff;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #fff;
 }
 
 .mc-tooltip.tip-a::after {
@@ -1369,11 +1496,28 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 }
 
 .ic-label {
-  font-size: 10px;
+  font-size: 16px;
   color: var(--color-text-secondary);
   text-align: center;
   letter-spacing: 0.5px;
   font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ic-label-zh {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.ic-label-en {
+  font-size: 9px;
+  font-weight: 500;
+  color: #bbb;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .ic-vals {
@@ -1384,7 +1528,7 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 
 .ic-val {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 700;
   line-height: 1;
 }
@@ -1479,8 +1623,8 @@ function metaBarB(m: MetaMetric): Record<string, string> {
 
 .ic-tooltip {
   position: absolute;
-  top: -36px;
-  padding: 4px 10px;
+  top: -56px;
+  padding: 6px 14px;
   background: #fff;
   border-radius: 8px;
   white-space: nowrap;
@@ -1507,17 +1651,26 @@ function metaBarB(m: MetaMetric): Record<string, string> {
   box-shadow: 0 2px 12px rgba(232, 168, 130, 0.12), 0 0 0 1px rgba(232, 168, 130, 0.15);
 }
 
-.ic-tip-text {
-  font-size: 11px;
-  font-weight: 600;
-  color: #666;
+.ic-tip-label {
+  font-size: 14px;
+  color: #888;
+  font-weight: 500;
 }
 
-.ic-tooltip.tip-a .ic-tip-text {
+.ic-tip-pct {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: #666;
+  margin: 0 4px;
+  white-space: nowrap;
+}
+
+.ic-tooltip.tip-a .ic-tip-pct {
   color: var(--color-a);
 }
 
-.ic-tooltip.tip-b .ic-tip-text {
+.ic-tooltip.tip-b .ic-tip-pct {
   color: var(--color-b);
 }
 
@@ -1527,38 +1680,21 @@ function metaBarB(m: MetaMetric): Record<string, string> {
   bottom: -4px;
   left: 50%;
   transform: translateX(-50%);
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid #fff;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #fff;
 }
 
-.selector-skeleton {
-  padding: 20px 0 0;
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-.skeleton-card {
-  flex: 1;
-  height: 80px;
-  background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 12px;
-}
-
-.skeleton-vs {
-  width: 44px;
-  text-align: center;
-  color: var(--color-text-muted);
-  font-family: Georgia, serif;
-  font-weight: 700;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+.selector-area-empty .model-chip input:disabled {
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #ccc;
+  cursor: default;
+  width: 100%;
+  opacity: 0.5;
 }
 
 .price-unit {
