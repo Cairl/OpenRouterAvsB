@@ -227,7 +227,8 @@ const nameB = computed(() => modelDisplayName(state.modelB));
 <style scoped>
 .chart-container {
   background: var(--color-card-bg);
-  border-radius: 10px;
+  border-radius: 24px;
+  corner-shape: squircle;
   border: 1px solid var(--color-border);
   padding: 16px;
   position: relative;

@@ -239,7 +239,8 @@ function updateInfoPos(e: MouseEvent) {
 
 .table-card {
   background: var(--color-card-bg);
-  border-radius: 10px;
+  border-radius: 24px;
+  corner-shape: squircle;
   overflow: hidden;
   border: 1px solid var(--color-border);
 }
@@ -434,7 +435,8 @@ td:nth-child(3).highlight {
   max-width: 400px;
   padding: 10px 14px;
   background: #fff;
-  border-radius: 8px;
+  border-radius: 20px;
+  corner-shape: squircle;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.04);
   font-size: 12px;
   line-height: 1.7;
